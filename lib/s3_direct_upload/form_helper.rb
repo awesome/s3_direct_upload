@@ -56,8 +56,11 @@ module S3DirectUpload
         }
       end
 
+      #def key
+      #  @key ||= "#{@key_starts_with}{timestamp}-{unique_id}-#{SecureRandom.hex}/${filename}"
+      #end
       def key
-        @key ||= "#{@key_starts_with}{timestamp}-{unique_id}-#{SecureRandom.hex}/${filename}"
+        @key ||= "#{@key_starts_with}/${filename}"
       end
 
       def url
