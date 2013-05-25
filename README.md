@@ -18,8 +18,8 @@ S3DirectUpload.config do |c|
   c.access_key_id = ""       # your access key id
   c.secret_access_key = ""   # your secret access key
   c.bucket = ""              # your bucket name
-  c.region = ""              # region prefix of your bucket url (optional), eg. "s3-eu-west-1"
-  c.url = ""                 # S3 API endpoint (optional), eg. "https://#{c.bucket}.s3.amazonaws.com/"
+  c.region = nil             # region prefix of your bucket url (optional), eg. "s3-eu-west-1"
+  c.url = nil                # S3 API endpoint (optional), eg. "https://#{c.bucket}.s3.amazonaws.com/"
 end
 ```
 
@@ -160,6 +160,13 @@ jQuery ->
 ```coffeescript
 $('#myS3Uploader').bind 's3_uploads_start', (e) ->
   alert("Uploads have started")
+```
+
+#### File Added
+`file_added` is fired once a file is added to the que. The original event, jquery_file_upload event, and the file data object from jquery_file_upload are passed.
+```coffeescript
+$('#myS3Uploader').bind 'file_added', (original_event, jquery_file_upload_event, file_data_object) ->
+  alert("A file has been added to the que")
 ```
 
 #### Successfull upload

@@ -22,6 +22,7 @@ $.fn.S3Uploader = (options) ->
     remove_failed_progress_bar: false
     progress_bar_target: null
     click_submit_target: null
+    allow_multiple_files: true
 
   $.extend settings, options
 
@@ -36,15 +37,19 @@ $.fn.S3Uploader = (options) ->
     $uploadForm.fileupload
 
       add: (e, data) ->
+        $uploadForm.trigger("file_added", [e,data])
+
         file = data.files[0]
         file.unique_id = Math.random().toString(36).substr(2,16)
 
         unless settings.before_add and not settings.before_add(file)
-          current_files.push data
           data.context = $($.trim(tmpl("template-upload", file))) if $('#template-upload').length > 0
           $(data.context).appendTo(settings.progress_bar_target || $uploadForm)
           if settings.click_submit_target
-           forms_for_submit.push data
+            if settings.allow_multiple_files
+              forms_for_submit.push data
+            else
+              forms_for_submit = [data]
           else
             data.submit()
 
@@ -94,9 +99,15 @@ $.fn.S3Uploader = (options) ->
           name: "content-type"
           value: fileType
 
+        key = $uploadForm.data("key").replace('{timestamp}', new Date().getTime()).replace('{unique_id}', @files[0].unique_id)
+
         # substitute upload timestamp and unique_id into key
-        key = data[1].value.replace('{timestamp}', new Date().getTime()).replace('{unique_id}', @files[0].unique_id)
         data[1].value = settings.path + key
+
+        # IE <= 9 doesn't have XHR2 hence it can't use formData
+        # replace 'key' field to submit form
+        unless 'FormData' of window
+          $uploadForm.find("input[name='key']").val(settings.path + key)
         data
 
   build_content_object = ($uploadForm, file, result) ->
@@ -106,7 +117,7 @@ $.fn.S3Uploader = (options) ->
       content.filepath = $('<a />').attr('href', content.url)[0].pathname
     else # IE <= 9 return a null result object so we use the file object instead
       domain           = $uploadForm.attr('action')
-      content.filepath = settings.path + $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
+      content.filepath = $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
       content.url      = domain + content.filepath + '/' + encodeURIComponent(file.name)
 
     content.filename   = file.name
@@ -126,6 +137,9 @@ $.fn.S3Uploader = (options) ->
 
   #public methods
   @initialize = ->
+    # Save key for IE9 Fix
+    $uploadForm.data("key", $uploadForm.find("input[name='key']").val())
+
     setUploadForm()
     this
 
